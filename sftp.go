@@ -11,11 +11,14 @@ import (
 )
 
 //MoveFile ...
-func MoveFile(localDir string, remoteDir string, host string, port int, user string, key []byte, remoteDirBackup string) error {
+func MoveFile(localDir string, remoteDir string, host string, port int, user string, key []byte, remoteDirBackup string, fileName string) error {
 	var (
 		err        error
 		sftpClient *sftp.Client
 	)
+	localDir += fileName
+
+	var remoteFileName = path.Base(fileName)
 
 	sftpClient, err = connect(user, localDir, remoteDir, port, host, key)
 	if err != nil {
@@ -30,7 +33,6 @@ func MoveFile(localDir string, remoteDir string, host string, port int, user str
 		return err
 	}
 
-	var remoteFileName = path.Base(localDir)
 	//joga para pasta de backup
 	if remoteDirBackup != "" {
 		dstFileBackup, err := sftpClient.Create(path.Join(remoteDirBackup, remoteFileName))
