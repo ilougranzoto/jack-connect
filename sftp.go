@@ -60,7 +60,7 @@ func MoveFile(localDir string, remoteDir string, host string, port string, user 
 }
 
 //Connect realiza conexão via sftp em algum servidor.
-func Connect(user string, localDir string, remoteDir string, port string, host string, key string) (*sftp.Client, error) {
+func Connect(localDir string, remoteDir string, host string, port string, user string, key string) (*sftp.Client, error) {
 	var (
 		addr         string
 		clientConfig *ssh.ClientConfig
