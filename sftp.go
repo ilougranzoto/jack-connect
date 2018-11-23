@@ -5,17 +5,19 @@ import (
 	"io/ioutil"
 	"log"
 	"path"
+	"strconv"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
-//MoveFile ...
-func MoveFile(localDir string, remoteDir string, host string, port int, user string, key []byte, remoteDirBackup string, fileName string) error {
+//MoveFile realiza a conexão e envia o arquivo via sftp para um servidor.
+func MoveFile(localDir string, remoteDir string, host string, port string, user string, key string, remoteDirBackup string, fileName string) error {
 	var (
 		err        error
 		sftpClient *sftp.Client
 	)
+
 	localDir += fileName
 
 	var remoteFileName = path.Base(fileName)
@@ -57,7 +59,8 @@ func MoveFile(localDir string, remoteDir string, host string, port int, user str
 
 }
 
-func Connect(userSftp string, localFilePath string, remoteDir string, portSftp int, hostSftp string, key []byte) (*sftp.Client, error) {
+//Connect realiza conexão via sftp em algum servidor.
+func Connect(user string, localDir string, remoteDir string, port string, host string, key string) (*sftp.Client, error) {
 	var (
 		addr         string
 		clientConfig *ssh.ClientConfig
@@ -66,9 +69,12 @@ func Connect(userSftp string, localFilePath string, remoteDir string, portSftp i
 		err          error
 		singer       ssh.Signer
 	)
-	addr = fmt.Sprintf("%s:%d", hostSftp, portSftp)
+	portSftp, err := strconv.Atoi(port)
+	bytes := []byte(key)
 
-	singer, err = ssh.ParsePrivateKey(key)
+	addr = fmt.Sprintf("%s:%d", host, portSftp)
+
+	singer, err = ssh.ParsePrivateKey(bytes)
 	if err != nil {
 		return nil, nil
 	}
@@ -76,7 +82,7 @@ func Connect(userSftp string, localFilePath string, remoteDir string, portSftp i
 	auths := []ssh.AuthMethod{ssh.PublicKeys(singer)}
 
 	clientConfig = &ssh.ClientConfig{
-		User:            userSftp,
+		User:            user,
 		Auth:            auths,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
