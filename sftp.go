@@ -20,7 +20,7 @@ func MoveFile(localDir string, remoteDir string, host string, port int, user str
 
 	var remoteFileName = path.Base(fileName)
 
-	sftpClient, err = connect(user, localDir, remoteDir, port, host, key)
+	sftpClient, err = Connect(user, localDir, remoteDir, port, host, key)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -57,7 +57,7 @@ func MoveFile(localDir string, remoteDir string, host string, port int, user str
 
 }
 
-func connect(userSftp string, localFilePath string, remoteDir string, portSftp int, hostSftp string, key []byte) (*sftp.Client, error) {
+func Connect(userSftp string, localFilePath string, remoteDir string, portSftp int, hostSftp string, key []byte) (*sftp.Client, error) {
 	var (
 		addr         string
 		clientConfig *ssh.ClientConfig
