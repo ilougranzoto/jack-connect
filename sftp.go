@@ -12,45 +12,29 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-//MoveFile realiza a conexão e envia o arquivo via sftp para um servidor.
-func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileName, fileNameBkp, flgRemoveFile string) error {
+//MoveFile realize the connection and send the files through sftp server.
+func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileName, fileNameBackup, flagRemoveFiles string) error {
 	var (
 		err        error
 		sftpClient *sftp.Client
 	)
 
-	localDir += fileName
-
-	var remoteFileName = path.Base(fileName)
-
-	sftpClient, err = Connect(localDir, remoteDir, host, port, user, key)
+	//open the connection with the server
+	sftpClient, err = Connect(host, port, user, key)
 	if err != nil {
 		log.Println(err.Error())
 		return err
 	}
 	defer sftpClient.Close()
 
-	buffer, err := ioutil.ReadFile(localDir)
+	//create the buffer of the file
+	buffer, err := ioutil.ReadFile(localDir + fileName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
 
-	//joga para pasta de backup
-	if remoteDirBackup != "" {
-
-		var remoteFileNameBkp = path.Base(fileNameBkp)
-		dstFileBackup, err := sftpClient.Create(path.Join(remoteDirBackup, remoteFileNameBkp))
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		dstFileBackup.Write(buffer)
-		defer dstFileBackup.Close()
-	}
-
-	//joga para pasta de upload.
-	dstFile, err := sftpClient.Create(path.Join(remoteDir, remoteFileName))
+	dstFile, err := sftpClient.Create(path.Join(remoteDir, fileName))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -59,17 +43,39 @@ func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileN
 
 	defer dstFile.Close()
 
-	if flgRemoveFile == "Y" {
+	if flagRemoveFiles == "Y" {
 		os.Remove(localDir + fileName)
-		os.Remove(localDir + fileNameBkp)
+	}
+
+	//Move the backup file to the specified folder
+	if remoteDirBackup != "" {
+
+		//create the buffer of the backup file
+		bufferBkp, err := ioutil.ReadFile(localDir + fileNameBackup)
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+		//realize the upload of the backup file
+		dstFileBackup, err := sftpClient.Create(path.Join(remoteDirBackup, fileNameBackup))
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		dstFileBackup.Write(bufferBkp)
+		defer dstFileBackup.Close()
+
+		if flagRemoveFiles == "Y" {
+			os.Remove(localDir + fileNameBackup)
+		}
 	}
 
 	return err
 
 }
 
-//Connect realiza conexão via sftp em algum servidor.
-func Connect(localDir string, remoteDir string, host string, port string, user string, key string) (*sftp.Client, error) {
+//Connect realize the connection through sftp server.
+func Connect(host, port, user, key string) (*sftp.Client, error) {
 	var (
 		addr         string
 		clientConfig *ssh.ClientConfig
@@ -97,7 +103,7 @@ func Connect(localDir string, remoteDir string, host string, port string, user s
 	}
 	clientConfig.SetDefaults()
 
-	// connet to ssh
+	// connect to ssh
 	sshClient, err = ssh.Dial("tcp", addr, clientConfig)
 
 	if err != nil {
