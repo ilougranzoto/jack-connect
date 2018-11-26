@@ -1,9 +1,10 @@
-package sftp
+package model
 
 import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"strconv"
 
@@ -12,7 +13,7 @@ import (
 )
 
 //MoveFile realiza a conexão e envia o arquivo via sftp para um servidor.
-func MoveFile(localDir string, remoteDir string, host string, port string, user string, key string, remoteDirBackup string, fileName string) error {
+func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileName, fileNameBkp, flgRemoverArq string) error {
 	var (
 		err        error
 		sftpClient *sftp.Client
@@ -22,7 +23,7 @@ func MoveFile(localDir string, remoteDir string, host string, port string, user 
 
 	var remoteFileName = path.Base(fileName)
 
-	sftpClient, err = Connect(user, localDir, remoteDir, port, host, key)
+	sftpClient, err = Connect(localDir, remoteDir, host, port, user, key)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -37,7 +38,9 @@ func MoveFile(localDir string, remoteDir string, host string, port string, user 
 
 	//joga para pasta de backup
 	if remoteDirBackup != "" {
-		dstFileBackup, err := sftpClient.Create(path.Join(remoteDirBackup, remoteFileName))
+
+		var remoteFileNameBkp = path.Base(fileNameBkp)
+		dstFileBackup, err := sftpClient.Create(path.Join(remoteDirBackup, remoteFileNameBkp))
 		if err != nil {
 			log.Println(err)
 			return err
@@ -55,6 +58,12 @@ func MoveFile(localDir string, remoteDir string, host string, port string, user 
 	dstFile.Write(buffer)
 
 	defer dstFile.Close()
+
+	if flgRemoverArq == "Y" {
+		os.Remove(localDir + fileName)
+		os.Remove(localDir + fileNameBkp)
+	}
+
 	return err
 
 }
