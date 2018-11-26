@@ -13,7 +13,7 @@ import (
 )
 
 //MoveFile realiza a conexão e envia o arquivo via sftp para um servidor.
-func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileName, fileNameBkp, flgRemoverArq string) error {
+func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileName, fileNameBkp, flgRemoveFile string) error {
 	var (
 		err        error
 		sftpClient *sftp.Client
@@ -59,7 +59,7 @@ func MoveFile(localDir, remoteDir, host, port, user, key, remoteDirBackup, fileN
 
 	defer dstFile.Close()
 
-	if flgRemoverArq == "Y" {
+	if flgRemoveFile == "Y" {
 		os.Remove(localDir + fileName)
 		os.Remove(localDir + fileNameBkp)
 	}
